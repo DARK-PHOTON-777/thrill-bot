@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+html {
+	font-family: "Barlow Condensed", sans-serif;
+	background: #09090b;
+}
