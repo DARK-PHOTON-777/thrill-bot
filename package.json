@@ -1,0 +1,33 @@
+{
+	"name": "thrill-bot",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"workspaces": [
+		"web",
+		"api"
+	],
+	"scripts": {
+		"prepare": "husky",
+		"precommit": "lint-staged",
+		"prepush": "npm run validate",
+		"validate": "biome check . && npm run validate --workspaces --if-present",
+		"format": "biome format --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.15",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.0.5",
+		"netlify-cli": "^26.0.2"
+	},
+	"lint-staged": {
+		"*.{js,ts,jsx,tsx,json}": "biome check --write --no-errors-on-unmatched"
+	},
+	"dependencies": {
+		"@ai-sdk/google": "^3.0.79",
+		"@ai-sdk/openai": "^3.0.65",
+		"@openrouter/agent": "^0.7.0",
+		"ai": "^6.0.191",
+		"pino-pretty": "^13.1.3"
+	}
+}
