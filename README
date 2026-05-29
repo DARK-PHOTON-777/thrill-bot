@@ -5,6 +5,8 @@ inference to find the perfect coaster for you. Describe what you're looking for
 in plain language, and Thrill-Bot will craft a precise JSON filter, sort through
 the full RCDB dataset, and return your best matches.
 
+**[Try the App!](https://thrill-bot.netlify.app/)**
+
 Deployed as a serverless Netlify app.
 
 ---
@@ -88,7 +90,7 @@ locally, wiring them together automatically.
 ```
 ├── web/        # Vite + React frontend
 ├── api/        # Shared Zod schemas, types, and utility functions
-└── netlify/    # Serverless functions — LLM inference and filter execution
+├── netlify/    # Serverless functions — LLM inference and filter execution
 ```
 
 ---
