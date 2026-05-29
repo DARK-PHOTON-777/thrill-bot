@@ -9,4 +9,5 @@ const store = getStore({
 
 const data = await store.get("coasters", { type: "text" });
 
+fs.mkdirSync(new URL("../data", import.meta.url), { recursive: true });
 fs.writeFileSync(new URL("../data/coasters.json", import.meta.url), data);
