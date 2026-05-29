@@ -1,5 +1,5 @@
 [build]
-	command = "npm run build --prefix web"
+	command = "node netlify/fetch.js && npm run build --prefix web"
 	publish = "web/dist"
 
 [dev]
