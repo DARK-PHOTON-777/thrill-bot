@@ -13,9 +13,7 @@ export function createFilterSchema(
 	for (const [key, raw] of Object.entries(schema.shape)) {
 		const inner = unwrap(raw);
 
-		if (inner instanceof z.ZodEnum) {
-			shape[key] = z.array(inner).optional();
-		} else if (inner instanceof z.ZodString) {
+		if (inner instanceof z.ZodEnum || inner instanceof z.ZodString) {
 			shape[key] = z.array(z.string()).optional();
 		} else if (inner instanceof z.ZodNumber) {
 			shape[key] = z
