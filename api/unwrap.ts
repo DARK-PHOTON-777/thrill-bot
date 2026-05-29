@@ -34,7 +34,7 @@ export const unwrap = (schema: unknown): z.ZodTypeAny => {
 		return unwrap(s.unwrap());
 	}
 
-	if (s._def && s._def.innerType) {
+	if (s._def?.innerType) {
 		return unwrap(s._def.innerType);
 	}
 

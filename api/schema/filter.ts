@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { unwrap_t } from "../unwrap.ts";
 import { unwrap } from "../unwrap.ts";
-import { CoasterSchema, StatusSchema } from "./coaster.ts";
+import { CoasterSchema } from "./coaster.ts";
 
 type FilterShape = Record<string, z.ZodTypeAny>;
 
