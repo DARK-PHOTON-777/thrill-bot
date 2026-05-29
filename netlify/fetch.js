@@ -9,4 +9,4 @@ const store = getStore({
 
 const data = await store.get("coasters", { type: "text" });
 
-fs.writeFileSync("../data/coasters.json", data);
+fs.writeFileSync(new URL("../data/coasters.json", import.meta.url), data);
