@@ -54,7 +54,7 @@ export const App = () => {
 	};
 
 	return (
-		<div className="min-h-dvh max-w-3xl mx-auto text-white flex flex-col items-center p-4 gap-4 pt-8">
+		<div className="min-h-dvh max-w-3xl mx-auto text-white flex flex-col items-center p-4 gap-4 py-8">
 			{/* Header */}
 			<header className="flex flex-col items-center gap-1 text-center">
 				<h1 className="text-6xl font-black uppercase text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.8)]">
