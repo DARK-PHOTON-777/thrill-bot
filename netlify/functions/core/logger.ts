@@ -1,16 +1,14 @@
-import pino, { type LoggerOptions } from "pino";
+import pino from "pino";
 
-const isNetlify = !!process.env.LAMBDA_TASK_ROOT;
+const prodLogger = pino({ level: process.env.LOG_LEVEL || "info" });
 
-const loggerOptions: LoggerOptions = {
-	level: process.env.LOG_LEVEL || "info",
-};
-
-if (!isNetlify) {
-	loggerOptions.transport = {
-		target: ["pino", "pretty"].join("-"),
+const devLogger = pino({
+	level: "debug",
+	transport: {
+		target: "pino-pretty",
 		options: { colorize: true },
-	};
-}
+	},
+});
 
-export const logger = pino(loggerOptions);
+export const logger =
+	process.env.NODE_ENV === "development" ? prodLogger : devLogger;
