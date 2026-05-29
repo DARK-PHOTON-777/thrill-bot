@@ -1,12 +1,16 @@
-import pino from "pino";
+import pino, { type LoggerOptions } from "pino";
 
-const isLocal =
-	process.env.NETLIFY_DEV === "true" || process.env.NODE_ENV !== "production";
+const isNetlify = process.env.NETLIFY === "true";
 
-export const logger = pino({
+const loggerOptions: LoggerOptions = {
 	level: process.env.LOG_LEVEL || "info",
+};
 
-	transport: isLocal
-		? { target: "pino-pretty", options: { colorize: true } }
-		: undefined,
-});
+if (!isNetlify) {
+	loggerOptions.transport = {
+		target: "pino-pretty",
+		options: { colorize: true },
+	};
+}
+
+export const logger = pino(loggerOptions);
