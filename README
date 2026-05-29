@@ -1,0 +1,94 @@
+# Thrill-Bot 🎢
+
+Thrill-Bot is an LLM-powered roller coaster recommender that uses tool-assisted
+inference to find the perfect coaster for you. Describe what you're looking for
+in plain language, and Thrill-Bot will craft a precise JSON filter, sort through
+the full RCDB dataset, and return your best matches.
+
+Deployed as a serverless Netlify app.
+
+---
+
+## How It Works
+
+A user's natural language query is sent to an LLM, which uses structured tool
+calls to construct a validated JSON filter. That filter is applied against a
+preprocessed coaster dataset to return ranked recommendations. All schema
+validation via Zod, ensuring the model's output and the API contract stay in
+sync.
+
+---
+
+## Tech Stack & Architecture
+
+- **Frontend:** Vite + React, with TanStack Query handling mutations and async
+  state for user queries.
+- **Backend:** Netlify Serverless Functions hosting the LLM inference logic and
+  filter execution.
+- **Validation:** Zod schemas shared across the frontend and backend, used for
+  both API validation and tool call output validation.
+- **LLM Integration:** API inference call constructs a structured JSON filter
+  object; tool usage is validated at runtime against shared Zod schemas.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+Ensure you have the following installed:
+
+- [Node.js & npm](https://nodejs.org/)
+- [Deno](https://deno.com/)
+- [Netlify CLI](https://docs.netlify.com/cli/get-started/)
+  (`npm install -g netlify-cli`)
+
+---
+
+## Installation
+
+### 1. Prepare the Coaster Dataset
+
+You will need the `coasters-raw.json` file from the
+[RCDB API](https://github.com/fabianrguez/rcdb-api).
+
+Once you have it, run the conversion script to generate the correctly formatted
+dataset:
+
+```bash
+deno run --allow-read --allow-write scripts/convert.ts
+```
+
+This outputs `coasters.json` in the expected format for the filter engine.
+
+### 2. Configure Environment Variables
+
+Copy the example env file and populate the required values:
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and fill in your API keys and any other required configuration.
+
+### 3. Install Dependencies & Start the Dev Server
+
+```bash
+npm install
+npx netlify dev
+```
+
+The Netlify CLI will spin up both the frontend and the serverless functions
+locally, wiring them together automatically.
+
+---
+
+## Project Structure
+
+```
+├── web/        # Vite + React frontend
+├── api/        # Shared Zod schemas, types, and utility functions
+└── netlify/    # Serverless functions — LLM inference and filter execution
+```
+
+---
