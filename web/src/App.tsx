@@ -8,10 +8,10 @@ import { responseSchema } from "../../api/schema/response.ts";
 import type { Response } from "../../api/types/response.ts";
 
 const EXAMPLES = [
-	"What's the fastest coaster in the state of Florida?",
-	"Best kid coasters in the state Ohio?",
-	"What's the longest rollercoaster that is launched?",
-	"Tallest wood Coaster in the United States?",
+	"What fast coaster would you recommend in the state of Florida?",
+	"What fast coaster would you recommend in Ohio?",
+	"What wood coaster would you recommend at Dollywood?",
+	"What launch coaster would you recommend in Pennsylvania?",
 ];
 
 const RCDB = "https://www.rcdb.com";
