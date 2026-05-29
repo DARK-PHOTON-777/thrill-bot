@@ -12,27 +12,40 @@ const coasters: Coaster[] = data as Coaster[];
 
 const coasterSearchTool = tool({
 	name: "search_rollercoasters",
-	description: `Find coasters by attribute. 
-    Convert imperial inputs (mph/ft) to metric (km/h, m) before calling. 
-    Use up to 3 TIMES ONLY. Do not use for ID selection.
-	Always use the status.state:"Operating" unless asked specifically for a different state.
-	THE TOOL ONLY DISPLAYS 3 RESULTS AT A TIME. IT WILL NOT SHOW YOU ALL THE RESULTS.
-	DON'T ASSUME YOU FOUND THE CORRECT COASTER. YOU MUST USE THE SORT FUNCTION TO GET ALL THE CORRECT RESULT.
-    AVOID defining fields unless necessary to narrow down results. 
-    if user asks for something like oldest, newest, fastest, slowest, etc.. use the relevant sort field.
-    Text searches are subtext matches. You MUST provide multiple variations in the string arrays to ensure a loose filter.
-	DO NOT USE ABBREVIATIONS("US", "OH") when creating filter.
-    For locations like the US, always include all variations: ["United States", "America", "United States of America"].
-	DO NOT OVERCONSTRAIN FILTERS. For instance, it's guarenteed that OHIO will be in the UNITED STATES.
-	Avoid using make / model for searching: Make will be specific manufactures.
-	If user request specialy types like launched, look for it in the elements enum. Use as many enumerations as possible that fit the description (LSM, LSM Launch, LIM).
-	Do not put max / min constraints on stats unless the users ask for it or is implied like (family -> speed: <100). DO NOT IF THEY ARE ASKING FOR FASTEST / LONGEST / etc..
-	DO NOT ADD PARKS UNLESS ASKED TO.
-	oldest = status.opened:asc, "newest = status.opened:desc", "tallest = stats.height:desc", "longest = stats.length:desc", "fastest = stats.speed:desc", "slowest = stats.speed:asc"
-	`,
+	description: `Search rollercoasters by attribute. Returns up to 3 results in metric.
+
+CONCEPT → FIELD MAPPING:
+- Location (state known)  → state: ["Ohio"]  (never add country)
+- Location (country only) → country: ["United States", "America", "United States of America"]
+- Launch coaster          → stats.elements: ["LSM Launch","LIM Launch","Hydraulic Launch","Flywheel Launch","Compressed Air Launch","Tire Propelled Launch"]
+- Wooden coaster          → type: ["Wood"]
+- Inverted/flying/wing    → design: ["Inverted"/"Flying"/"Wing"]
+- Fastest/tallest/longest → sort only, NO stat constraints
+- Family/kids             → stats.speed.max: 80
+
+SORT SHORTHANDS:
+oldest=status.opened:asc | newest=status.opened:desc | fastest=stats.speed:desc | tallest=stats.height:desc | longest=stats.length:desc
+
+ALWAYS SET: status.state: ["Operating"] unless asked otherwise.
+NEVER SET: make/model unless user names a manufacturer. Never invent enum values.
+USE MINIMUM FIELDS. Each extra field risks zero results.`,
 	inputSchema: searchSchema,
 	execute: async (searchRule) => {
 		logger.debug(searchRule, "LLM Search Rule");
+
+		if (
+			searchRule.filter?.stats?.speed?.max &&
+			searchRule.filter.stats.speed.max >= 500
+		) {
+			delete searchRule.filter.stats.speed.max;
+		}
+		if (searchRule.filter.stats?.speed?.min === 0) {
+			delete searchRule.filter.stats.speed.min;
+		}
+
+		if (searchRule.filter.state && searchRule.filter.country) {
+			delete searchRule.filter.country;
+		}
 
 		const results = search(coasters, searchRule as Search);
 
@@ -49,17 +62,55 @@ const coasterSearchTool = tool({
 	},
 });
 
-const SYSTEM_PROMPT = `You are ThrillBot, a high-energy roller coaster expert.
-When asked for a recommendation, follow these rules exactly:
-1. Call search_rollercoasters ONCE to discover options.
-2. If results are greater than 10, filter them down only ONE more time(Change only ONE field!). Ignore this step if filtering for fastests, longest, newer, oldest..
-3. Select the SINGLE best metric match from the tool results.
-4. Reply with a high-energy quip answering the user. Include the park name and a key stat(Must convert to imperial units).
-5. Append exactly "SELECTED_ID: <id_number>" to the very last line of your response.
+const SYSTEM_PROMPT = `You are ThrillBot, a roller coaster recommendation expert.
 
-Example:
-"You've got to try VelociCoaster at Universal Islands of Adventure! It launches you at 112 km/h through a zero-g stall.
-SELECTED_ID: 104"`;
+## TOOL RULES
+- Call search_rollercoasters at most 3 times.
+- On the first call, use the MINIMUM fields needed. Only add fields that directly answer the query.
+- If results > 10, call again changing ONLY ONE field to narrow down.
+- Never search by ID.
+
+## FIELD SELECTION RULES
+**Location:** Use ONLY the most specific field available.
+  - If city is known → use only city
+  - If state is known → use only state (NOT country too — state implies country)
+  - If only country → use only country
+  
+**"Launch coaster"** → search elements: ["LSM Launch", "LIM Launch", "Hydraulic Launch", "Tire Propelled Launch", "Flywheel Launch", "Compressed Air Launch"]
+**"Wooden coaster"** → type: ["Wood"]
+**"Inverted/flying/wing"** → design: ["Inverted"] / ["Flying"] / ["Wing"]
+
+**Stats (speed/height/length):** 
+  - Only set min/max if the user explicitly gives a number or implies a bound ("under 100mph", "family-friendly")
+  - "fastest" = sort by speed desc, NO max constraint
+  - "tallest" = sort by height desc, NO max constraint
+
+**make/model:** NEVER include unless the user names a specific manufacturer or model.
+
+**NEVER invent values.** Only use exact strings from the schema enums.
+  - type is ONLY: "Steel" or "Wood"
+  - design is ONLY: "Sit Down", "Inverted", "Flying", "Wing", "Stand Up", "Suspended", "Bobsled", "Pipeline"
+
+## BAD EXAMPLES (never do this)
+❌ type: ["Roller Coaster"]          — not a valid enum
+❌ design: ["Traditional"]           — not a valid enum  
+❌ stats.speed.max: 999              — meaningless constraint
+❌ make: ["Intamin", "Vekoma", ...]     — hallucinated unless user asked
+❌ state: ["Ohio"], country: ["United States"] — redundant
+❌ model: ["LSM"]                    — use elements instead
+
+## GOOD EXAMPLES
+Query: "fast coaster in Ohio"
+→ filter: { state: ["Ohio"], status: { state: ["Operating"] } }
+→ sort: { stats: { speed: "desc" } }
+
+Query: "launch coaster in Pennsylvania"  
+→ filter: { state: ["Pennsylvania"], status: { state: ["Operating"] }, stats: { elements: ["LSM Launch", "LIM Launch", "Hydraulic Launch", "Tire Propelled Launch"] } }
+→ sort: { name: "asc" }
+
+## RESPONSE FORMAT
+After selecting, reply with a high-energy one-liner. Include park name and CONVERT KEY METRIC STAT TO IMPERIAL.
+End your final response with exactly: SELECTED_ID: <id>`;
 
 export async function getCoaster(query: string): Promise<Response> {
 	const client = new OpenRouter({
@@ -71,6 +122,7 @@ export async function getCoaster(query: string): Promise<Response> {
 	const result = callModel(client, {
 		model: process.env.OPENROUTER_MODEL ?? "anthropic/claude-3-haiku",
 		tools: [coasterSearchTool] as const,
+		temperature: 0,
 		input: [
 			{ role: "system", content: SYSTEM_PROMPT, id: "system-prompt" },
 			{ role: "user", content: query },
