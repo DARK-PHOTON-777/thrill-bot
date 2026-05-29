@@ -1,0 +1,9 @@
+{
+	"name": "@thrill-bot/scripts",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"dependencies": {
+		"@thrill-bot/api": "workspace:*"
+	}
+}
